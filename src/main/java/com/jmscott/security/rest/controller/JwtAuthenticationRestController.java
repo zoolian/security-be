@@ -155,33 +155,6 @@ public class JwtAuthenticationRestController {
 	  return ResponseEntity.ok().build();
   }
   
-//  @PostMapping(value = "/signup")
-//  public ResponseEntity<?> createUser(@RequestBody User user) {
-//	  User userExists = customUserService.findUserByUsername(user.getUsername());
-//	  if(userExists != null) {
-//		  return ResponseEntity.status(HttpStatus.CONFLICT).header("Conflicting-User", user.getUsername()).build();
-//	  } else {
-//		  customUserService.saveUser(user);
-//		  return ResponseEntity.ok().build();
-//	  }
-//  }
-
-  //@GetMapping(value = "${jwt.refresh.token.uri}")
-  //public ResponseEntity<?> refreshAndGetAuthenticationToken(HttpServletRequest request, HttpServletResponse response) {
-//  if (jwtTokenUtil.canTokenBeRefreshed(jwtToken)) {
-//	  String refreshedToken = jwtTokenUtil.refreshToken(jwtToken);
-//	  Date tokenDate = jwtTokenUtil.getExpirationDateFromToken(refreshedToken);
-//	  sessionCookie = new Cookie("authenticationToken", refreshedToken);	// replace cookie with refreshed token cookie
-//	  sessionCookie.setHttpOnly(true);
-//	  sessionCookie.setMaxAge(7 * 24 * 60 * 60);
-//	  // TODO: enable once https is established
-//	  //sessionCookie.setSecure(true);
-//	  response.addCookie(sessionCookie);
-//
-//	  return ResponseEntity.ok(new JwtTokenResponse(token, tokenDate));
-//  } else {
-//	  return ResponseEntity.badRequest().body(null);
-//  }
   @GetMapping(value = "/validate")
   public ResponseEntity<?> validateAuthenticationToken(HttpServletRequest request, HttpServletResponse response) {
 	  final Cookie[] allCookies = request.getCookies();
