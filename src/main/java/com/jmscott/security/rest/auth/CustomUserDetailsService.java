@@ -42,6 +42,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 		User user = userRepository.findByUsername(username);
 		if(user != null) {
 			List<GrantedAuthority> authorities = getUserAuthority(user.getRoles());
+			if(!user.isEnabled()) {
+				return null;
+			}
 			return buildUserForAuthentication(user, authorities);
 		} else { throw new UsernameNotFoundException(String.format("USER_NOT_FOUND '%s'.", username)); }
 	}

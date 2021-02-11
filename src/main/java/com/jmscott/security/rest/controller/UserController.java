@@ -6,6 +6,10 @@ import java.util.Collection;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -30,6 +34,8 @@ import com.jmscott.security.rest.model.User;
 import com.jmscott.security.rest.repository.PasswordRepository;
 import com.jmscott.security.rest.repository.RoleRepository;
 import com.jmscott.security.rest.repository.UserRepository;
+import com.mongodb.DBRef;
+import com.mongodb.client.result.UpdateResult;
 import com.querydsl.core.types.dsl.BooleanExpression;
 
 //TODO: double check that responses are to industry standard
@@ -51,11 +57,14 @@ public class UserController {
 	@Autowired
 	private RoleRepository roleRespository;
 	
+	@Autowired
+	private MongoTemplate mongoTemplate;
+	
 	@GetMapping
 	@CrossOrigin
 	public List<User> getUsersAll(@RequestParam(required = false) boolean showDisabled) {
 		QUser qUser = new QUser("user");
-		BooleanExpression filterById = qUser.id.ne("5fd907ac51ba6208a6783b0a"); // builtin admin account
+		BooleanExpression filterById = qUser.id.ne("6012d4b37d63d376f40b4fbd"); // builtin admin account
 //		BooleanExpression filterByEnabled = showDisabled ? null : globalUser.enabled.isTrue();
 //		
 		List<User> users = (List<User>) userRepository.findAll(filterById);
@@ -112,6 +121,7 @@ public class UserController {
 		return ResponseEntity.ok(user);
 	}
 	
+	// TODO: verify unique true functions
 	@PostMapping
 	public ResponseEntity<Void> createUser(@Validated @RequestBody User user) {
 		user.setId(null); // guarantee that mongo is creating id
@@ -125,13 +135,27 @@ public class UserController {
 	}
 	
 	@PutMapping(path = "/{id}")
-	public ResponseEntity<User> updateUser(
+	public ResponseEntity<UpdateResult> updateUser(
 			@PathVariable String id,
 			@Validated @RequestBody User userDetails) throws ResourceNotFoundException {
 		userRepository.findById(id).orElseThrow( () -> new ResourceNotFoundException("User not found with id " + id) );
-		User savedUser = userRepository.save(userDetails);
+
+		Query query = new Query().addCriteria(Criteria.where("_id").is(id));
+		Update update = new Update();
+		update.set("firstName", userDetails.getFirstName());
+		update.set("lastName", userDetails.getLastName());
+		update.set("email", userDetails.getEmail());
+		update.set("age", userDetails.getAge());
+		update.set("username", userDetails.getUsername());
+		update.set("enabled", userDetails.isEnabled());
+		// BROKEN: either make this set, or pull all first
+		for(Role r : userDetails.getRoles()) {
+			update.push("roles", new DBRef("role", r.getId()));
+		}
+		UpdateResult savedUser = mongoTemplate.updateFirst(query, update, User.class);
+		//User savedUser = userRepository.save(userDetails);
 		
-		return new ResponseEntity<User>(savedUser, HttpStatus.OK);
+		return new ResponseEntity<UpdateResult>(savedUser, HttpStatus.OK);
 	}
 	
 	@PutMapping(path = "/secret/{userId}")

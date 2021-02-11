@@ -1,10 +1,6 @@
 package com.jmscott.security.rest.model;
 
 public class UserWithPassword extends User {
-	
-	public UserWithPassword(String firstName, String lastName, String email, int age) {
-		super(firstName, lastName, email, age);
-	}
 
 	//private String username;
 	
@@ -21,6 +17,16 @@ public class UserWithPassword extends User {
 //	public void setUsername(String username) {
 //		this.username = username;
 //	}
+
+	
+	public UserWithPassword(String firstName, String lastName, String email, String username, String password, boolean enabled) {
+		super(firstName, lastName, email, username, enabled);
+		this.password = password;
+	}
+	
+	public UserWithPassword() {
+		super();
+	}
 
 	public String getPassword() {
 		return password;

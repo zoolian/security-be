@@ -13,7 +13,7 @@ public class User extends Person {
 	@Indexed(unique = true)
 	private String username;
 	
-	private boolean enabled;
+	private boolean enabled = true;
 	
 	// don't cascade save roles. on the front end, there's no reason to hold all the fields ...
 	// they should be changed in the role manager
@@ -24,8 +24,8 @@ public class User extends Person {
 		super();
 	}
 
-	public User(String firstName, String lastName, String email, int age) {
-		super(firstName, lastName, email, age);
+	public User(String firstName, String lastName, String email) {
+		super(firstName, lastName, email);
 	}
 
 	public User(String firstName, String lastName, String email, int age, String username, boolean enabled, Collection<Role> roles) {
@@ -35,8 +35,8 @@ public class User extends Person {
 		this.roles = roles;
 	}
 
-	public User(String firstName, String lastName, String email, int age, String username, boolean enabled) {
-		super(firstName, lastName, email, age);
+	public User(String firstName, String lastName, String email, String username, boolean enabled) {
+		super(firstName, lastName, email);
 		this.username = username;
 		this.enabled = enabled;
 	}

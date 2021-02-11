@@ -31,6 +31,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,7 +60,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 
 @RestController
 @RequestMapping
-@CrossOrigin(origins= {"http://localhost:3003", "http://localhost:3001", "http://localhost:3000", "https://security.jmscottnovels.com", "https://blog.jmscottnovels.com"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:3003", "http://localhost:3001", "http://localhost:3000", "https://security.jmscottnovels.com", "https://blog.jmscottnovels.com"}, allowCredentials = "true")
 public class JwtAuthenticationRestController {
 
   @Value("${jwt.http.request.header}")
@@ -91,10 +92,19 @@ public class JwtAuthenticationRestController {
   @PostMapping(value = "${jwt.get.token.uri}")
   public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtTokenRequest authenticationRequest, HttpServletResponse response)
       throws AuthenticationException {
-
+	  
+	final UserDetails userDetails;
     authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
-
-    final UserDetails userDetails = customUserService.loadUserByUsername(authenticationRequest.getUsername());
+    
+    try {
+    	userDetails = customUserService.loadUserByUsername(authenticationRequest.getUsername());
+    } catch (UsernameNotFoundException u) {
+    	return ResponseEntity.notFound().header("AccessDenied", "NO_SUCH_USER").build();
+    }
+    
+    if(userDetails == null) {
+    	return ResponseEntity.status(HttpStatus.UNAUTHORIZED).header("AccessDenied", "USER_DISABLED").build();
+    }
     
     final String token = jwtTokenUtil.generateToken(userDetails);
     final Date tokenDate = jwtTokenUtil.getExpirationDateFromToken(token);
@@ -110,7 +120,10 @@ public class JwtAuthenticationRestController {
   
   @PostMapping(value = "/signup")
   public ResponseEntity<?> createUser(@RequestBody UserWithPassword user) throws IOException {
-	  User newUser = new User(user.getFirstName(), user.getLastName(), user.getEmail(), user.getAge(), user.getUsername(), true);
+	  if(userRepository.getByUsername(user.getUsername()).isPresent()) {
+		  return ResponseEntity.status(HttpStatus.CONFLICT).header("Conflict", "USERNAME_IN_USE").build();
+	  }
+	  User newUser = new User(user.getFirstName(), user.getLastName(), user.getEmail(), user.getUsername(), user.isEnabled());
 	  User savedUser = userRepository.save(newUser);
 	  Password password = new Password(savedUser.getId(), user.getPassword());
 	  customUserService.saveUser(savedUser, password);
@@ -121,6 +134,9 @@ public class JwtAuthenticationRestController {
   // TODO: deploy smtp
   @PostMapping(value = "/reset/{id}")
   public ResponseEntity<?> passwordResetEmail(@PathVariable String id, @RequestBody String email) throws IOException, MessagingException {
+	  if(!userRepository.findById(id).isPresent()) {
+		  return ResponseEntity.status(HttpStatus.NOT_FOUND).header("message", "NO_SUCH_USER").build();
+	  }
 	  Properties prop = new Properties();	  
 	  prop.put("mail.smtp.auth", true);
 	  prop.put("mail.smtp.starttls.enable", "true");
@@ -155,12 +171,13 @@ public class JwtAuthenticationRestController {
 	  return ResponseEntity.ok().build();
   }
   
+  // we're validating both the token and that the user still exists
   @GetMapping(value = "/validate")
-  public ResponseEntity<?> validateAuthenticationToken(HttpServletRequest request, HttpServletResponse response) {
+  public ResponseEntity<?> validateAuthenticationToken(HttpServletRequest request, HttpServletResponse response) throws ResourceNotFoundException {
 	  final Cookie[] allCookies = request.getCookies();
 	  Cookie sessionCookie = null;
 	  String jwtToken = null;
-	  String username = null;
+	  final String username;
 	  
 	  if(allCookies != null) {
 		  sessionCookie = Arrays.stream(allCookies).filter(c -> c.getName().equals("authenticationToken")).findFirst().orElse(null);
@@ -179,7 +196,15 @@ public class JwtAuthenticationRestController {
 	  } else {
 		  return ResponseEntity.status(HttpStatus.FORBIDDEN).header("AccessDenied", "No active authentication session").build();
 	  }
-
+	  
+	  //validate that user hasn't been deleted since last login, then check for disabled
+	  User user = userRepository.getByUsername(username).orElseThrow(
+			() -> new ResourceNotFoundException("User not found: " + username));	 
+	  
+	  if(!user.isEnabled()) {
+		  return ResponseEntity.status(HttpStatus.UNAUTHORIZED).header("AccessDenied", "USER_DISABLED").build();
+	  }
+	  
 	  return ResponseEntity.ok(username);
   }
 
@@ -199,7 +224,7 @@ public class JwtAuthenticationRestController {
 	
 	for(Role userRole : userRoles) {
 		for(Role pageRole : pageRoles) {
-			if(pageRole.getId().equals(userRole.getId())) {				
+			if(pageRole.getId().equals(userRole.getId())) {
 				access = true;
 			}
 		}
