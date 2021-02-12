@@ -25,6 +25,8 @@ public class QUser extends EntityPathBase<User> {
     //inherited
     public final NumberPath<Integer> age = _super.age;
 
+    public final CollectionPath<com.mongodb.DBRef, com.mongodb.QDBRef> DBRefRoles = this.<com.mongodb.DBRef, com.mongodb.QDBRef>createCollection("DBRefRoles", com.mongodb.DBRef.class, com.mongodb.QDBRef.class, PathInits.DIRECT2);
+
     //inherited
     public final StringPath email = _super.email;
 

@@ -34,7 +34,6 @@ import com.jmscott.security.rest.model.User;
 import com.jmscott.security.rest.repository.PasswordRepository;
 import com.jmscott.security.rest.repository.RoleRepository;
 import com.jmscott.security.rest.repository.UserRepository;
-import com.mongodb.DBRef;
 import com.mongodb.client.result.UpdateResult;
 import com.querydsl.core.types.dsl.BooleanExpression;
 
@@ -101,7 +100,7 @@ public class UserController {
 		return users;
 	}
 	
-	// qUser.roles.any().role.eq("ADMIN")	// use any() for array in object
+	// EXAMPLE: qUser.roles.any().role.eq("ADMIN")	// use any() for array in object
 	
 	@GetMapping(path = "/id/{id}")
 	public ResponseEntity<User> getUserById(@PathVariable String id) throws ResourceNotFoundException {
@@ -121,7 +120,7 @@ public class UserController {
 		return ResponseEntity.ok(user);
 	}
 	
-	// TODO: verify unique true functions
+	// TODO: functions to verify unique=true
 	@PostMapping
 	public ResponseEntity<Void> createUser(@Validated @RequestBody User user) {
 		user.setId(null); // guarantee that mongo is creating id
@@ -134,6 +133,11 @@ public class UserController {
 		return ResponseEntity.created(uri).build();
 	}
 	
+	// *******************************************************
+	// MongoRepository.save() replaces instead of updating.
+	// The following PUT method needs to be used on all involved super classes
+	// in order to no overwrite fields that don't exist in the super class
+	// *******************************************************
 	@PutMapping(path = "/{id}")
 	public ResponseEntity<UpdateResult> updateUser(
 			@PathVariable String id,
@@ -141,17 +145,24 @@ public class UserController {
 		userRepository.findById(id).orElseThrow( () -> new ResourceNotFoundException("User not found with id " + id) );
 
 		Query query = new Query().addCriteria(Criteria.where("_id").is(id));
-		Update update = new Update();
-		update.set("firstName", userDetails.getFirstName());
-		update.set("lastName", userDetails.getLastName());
-		update.set("email", userDetails.getEmail());
-		update.set("age", userDetails.getAge());
-		update.set("username", userDetails.getUsername());
-		update.set("enabled", userDetails.isEnabled());
+		
+		Update update = new Update()
+		.set("firstName", userDetails.getFirstName())
+		.set("lastName", userDetails.getLastName())
+		.set("email", userDetails.getEmail())
+		.set("age", userDetails.getAge())
+		.set("username", userDetails.getUsername())
+		.set("enabled", userDetails.isEnabled())
+		.set("roles", userDetails.getDBRefRoles());
 		// BROKEN: either make this set, or pull all first
-		for(Role r : userDetails.getRoles()) {
-			update.push("roles", new DBRef("role", r.getId()));
-		}
+//		Query rolesQuery;
+//		Update rolesUpdate = new Update();
+		//for(Role r : userDetails.getRoles()) {
+//			rolesQuery = new Query().addCriteria(Criteria.where("_id").is(r.getId()));
+//			rolesUpdate.set("role.$._id", new DBRef("role", r.getId()));
+			//update.set("roles", new DBRef("role", r.getId()));
+			//update.push("roles", new DBRef("role", r.getId()));
+		//}
 		UpdateResult savedUser = mongoTemplate.updateFirst(query, update, User.class);
 		//User savedUser = userRepository.save(userDetails);
 		

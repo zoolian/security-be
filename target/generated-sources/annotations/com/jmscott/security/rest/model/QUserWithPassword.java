@@ -25,6 +25,9 @@ public class QUserWithPassword extends EntityPathBase<UserWithPassword> {
     public final NumberPath<Integer> age = _super.age;
 
     //inherited
+    public final CollectionPath<com.mongodb.DBRef, com.mongodb.QDBRef> DBRefRoles = _super.DBRefRoles;
+
+    //inherited
     public final StringPath email = _super.email;
 
     //inherited
