@@ -22,10 +22,10 @@ public class QUserWithPassword extends EntityPathBase<UserWithPassword> {
     public final QUser _super = new QUser(this);
 
     //inherited
-    public final NumberPath<Integer> age = _super.age;
+    public final CollectionPath<com.mongodb.DBRef, com.mongodb.QDBRef> DBRefRoles = _super.DBRefRoles;
 
     //inherited
-    public final CollectionPath<com.mongodb.DBRef, com.mongodb.QDBRef> DBRefRoles = _super.DBRefRoles;
+    public final DatePath<java.time.LocalDate> dob = _super.dob;
 
     //inherited
     public final StringPath email = _super.email;

@@ -1,6 +1,7 @@
 package com.jmscott.security.rest.controller;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -90,15 +91,15 @@ public class UserController {
 		return users;
 	}
 	
-	@GetMapping(path = "/age-range/{ageLow}/{ageHigh}")
-	public List<User> getUsersByAgeRange(@PathVariable int ageLow, @PathVariable int ageHigh) {
-		QUser qUser = new QUser("user");
-		BooleanExpression filterByAge = qUser.age.between(ageLow, ageHigh);
-		
-		List<User> users = (List<User>) this.userRepository.findAll(filterByAge);
-		
-		return users;
-	}
+//	@GetMapping(path = "/dob-range/{ageLow}/{ageHigh}")
+//	public List<User> getUsersByAgeRange(@PathVariable int ageLow, @PathVariable int ageHigh) {
+//		QUser qUser = new QUser("user");
+//		BooleanExpression filterByAge = qUser.dob.between(ageLow, ageHigh);
+//		
+//		List<User> users = (List<User>) this.userRepository.findAll(filterByAge);
+//		
+//		return users;
+//	}
 	
 	// EXAMPLE: qUser.roles.any().role.eq("ADMIN")	// use any() for array in object
 	
@@ -115,8 +116,7 @@ public class UserController {
 	public ResponseEntity<User> getGenericUser() throws ResourceNotFoundException {
 		Collection<Role> roles = new ArrayList<>();
 		roles.add(roleRespository.findByName("VIEWER"));
-		
-		User user = new User("John", "Doe", "john@domain.tld", 100, "fakeUserName", true, roles);
+		User user = new User("John", "Doe", "john@domain.tld", LocalDate.parse("1955-01-01"), "fakeUserName", true, roles);
 		return ResponseEntity.ok(user);
 	}
 	
@@ -150,7 +150,7 @@ public class UserController {
 		.set("firstName", userDetails.getFirstName())
 		.set("lastName", userDetails.getLastName())
 		.set("email", userDetails.getEmail())
-		.set("age", userDetails.getAge())
+		.set("dob", userDetails.getDob())
 		.set("username", userDetails.getUsername())
 		.set("enabled", userDetails.isEnabled())
 		.set("roles", userDetails.getDBRefRoles());

@@ -18,7 +18,6 @@ public class UserWithPassword extends User {
 //		this.username = username;
 //	}
 
-	
 	public UserWithPassword(String firstName, String lastName, String email, String username, String password, boolean enabled) {
 		super(firstName, lastName, email, username, enabled);
 		this.password = password;
@@ -41,7 +40,7 @@ public class UserWithPassword extends User {
 		return "UserWithPassword [password=" + password + ", getUsername()=" + getUsername() + ", isEnabled()="
 				+ isEnabled() + ", getRoles()=" + getRoles() + ", toString()=" + super.toString() + ", getId()="
 				+ getId() + ", getFirstName()=" + getFirstName() + ", getLastName()=" + getLastName() + ", getEmail()="
-				+ getEmail() + ", getAge()=" + getAge() + ", getClass()=" + getClass() + ", hashCode()=" + hashCode()
+				+ getEmail() + ", getDob()=" + getDob() + ", getClass()=" + getClass() + ", hashCode()=" + hashCode()
 				+ "]";
 	}
 

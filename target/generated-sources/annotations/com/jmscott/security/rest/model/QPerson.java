@@ -19,7 +19,7 @@ public class QPerson extends EntityPathBase<Person> {
 
     public static final QPerson person = new QPerson("person");
 
-    public final NumberPath<Integer> age = createNumber("age", Integer.class);
+    public final DatePath<java.time.LocalDate> dob = createDate("dob", java.time.LocalDate.class);
 
     public final StringPath email = createString("email");
 

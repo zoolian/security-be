@@ -1,5 +1,6 @@
 package com.jmscott.security.rest.model;
 
+import java.time.LocalDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -18,15 +19,15 @@ public class Person {
 	//private Address address;
 	private String email;
 	
-	private int age;	
+	private LocalDate dob = LocalDate.now();
 	
 	public Person() {}
 
-	public Person(String firstName, String lastName, String email, int age) {
+	public Person(String firstName, String lastName, String email, LocalDate dob) {
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.email = email;
-		this.age = age;
+		this.dob = dob;
 	}
 	
 	public Person(String firstName, String lastName, String email) {
@@ -65,16 +66,17 @@ public class Person {
 	public void setEmail(String email) {
 		this.email = email;
 	}
-	public int getAge() {
-		return age;
+	public LocalDate getDob() {
+		return dob;
 	}
-	public void setAge(int age) {
-		this.age = age;
+
+	public void setDob(LocalDate dob) {
+		this.dob = dob;
 	}
 	
 	@Override
 	public String toString() {
 		return "Person [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", email=" + email
-				+ ", age=" + age + "]";
+				+ "]";
 	}
 }
